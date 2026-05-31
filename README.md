@@ -13,13 +13,12 @@ Ele faz o minimo necessario para manter compatibilidade com o client:
 ## Requisitos
 
 - Harman/Adobe AIR SDK com `mxmlc` e `adl` no `PATH`.
-- `../Loader/src` disponivel ao lado deste projeto para compilar `DirectGameRuntime.swf`.
 - Arquivos runtime do jogo (`library.swf`, `hardware.swf`, `software.swf`) locais ou remotos.
 
 ## Build
 
 ```bash
-mxmlc -source-path src ../Loader/src -output bin/DirectGameRuntime.swf -swf-version 23 -default-background-color 0x000000 src/DirectGameLoader.as
+mxmlc -source-path src -output bin/DirectGameRuntime.swf -swf-version 23 -default-background-color 0x000000 src/DirectGameLoader.as
 
 mxmlc -source-path src -output bin/DirectLoader.swf -swf-version 23 -default-background-color 0x000000 src/DirectLoaderBootstrap.as
 ```
@@ -66,4 +65,3 @@ Aliases mantidos por compatibilidade:
 - `--software-swf` equivale a `--software`.
 
 Se `--library`, `--hardware` ou `--software` nao forem definidos, o loader usa `resources/library.swf`, `resources/hardware.swf` e `resources/software.swf`.
-
