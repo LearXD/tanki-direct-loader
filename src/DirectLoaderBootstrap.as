@@ -7,11 +7,14 @@ package
    import flash.events.Event;
    import flash.events.InvokeEvent;
    import flash.filesystem.File;
+   import flash.net.URLLoader;
+   import flash.net.URLLoaderDataFormat;
    import flash.net.URLRequest;
    import flash.system.ApplicationDomain;
    import flash.system.LoaderContext;
    import flash.text.TextField;
    import flash.text.TextFormat;
+   import flash.utils.ByteArray;
 
    public class DirectLoaderBootstrap extends Sprite
    {
@@ -20,6 +23,7 @@ package
       private var stageReady:Boolean = false;
       private var logField:TextField;
       private var runtimeLoader:Loader;
+      private var loaderBytes:URLLoader;
 
       public function DirectLoaderBootstrap()
       {
@@ -45,10 +49,6 @@ package
 
       private function createLogField() : void
       {
-         graphics.beginFill(0x000000);
-         graphics.drawRect(0,0,stage.stageWidth,stage.stageHeight);
-         graphics.endFill();
-
          this.logField = new TextField();
          this.logField.defaultTextFormat = new TextFormat("Tahoma",12,0xFFFFFF);
          this.logField.multiline = true;
@@ -70,10 +70,6 @@ package
          {
             parameters["lang"] = "ru";
          }
-         if(parameters["engine"] == null)
-         {
-            parameters["engine"] = "auto";
-         }
          if(parameters["library"] == null && parameters["swf"] != null)
          {
             parameters["library"] = parameters["swf"];
@@ -86,24 +82,20 @@ package
          {
             parameters["swf"] = parameters["library"];
          }
-         if(parameters["hardware"] == null && parameters["hardware-swf"] != null)
-         {
-            parameters["hardware"] = parameters["hardware-swf"];
-         }
-         if(parameters["software"] == null && parameters["software-swf"] != null)
-         {
-            parameters["software"] = parameters["software-swf"];
-         }
          if(parameters["config"] == null && parameters["resources"] != null)
          {
             parameters["config"] = this.joinUrl(parameters["resources"],"config.xml");
          }
+         if(parameters["loader"] == null)
+         {
+            parameters["loader"] = "GameLoader.swf";
+         }
 
-         this.log("Starting runtime with LoaderContext parameters");
+         this.log("Starting GameLoader.swf with LoaderContext parameters");
          this.log("resources=" + parameters["resources"]);
-         this.log("library=" + parameters["library"]);
-         this.log("hardware=" + parameters["hardware"]);
-         this.log("software=" + parameters["software"]);
+         this.log("swf=" + parameters["swf"]);
+         this.log("loader=" + parameters["loader"]);
+         this.log("config=" + parameters["config"]);
          this.log("ip=" + parameters["ip"]);
          this.log("port=" + parameters["port"]);
          this.log("lang=" + parameters["lang"]);
@@ -116,18 +108,35 @@ package
          this.runtimeLoader.contentLoaderInfo.addEventListener(Event.COMPLETE,this.onRuntimeLoaded,false,0,true);
          this.runtimeLoader.contentLoaderInfo.addEventListener("ioError",this.onRuntimeError,false,0,true);
          this.runtimeLoader.contentLoaderInfo.addEventListener("securityError",this.onRuntimeError,false,0,true);
-         this.runtimeLoader.load(new URLRequest(File.applicationDirectory.resolvePath("DirectGameRuntime.swf").url),context);
+         this.loaderBytes = new URLLoader();
+         this.loaderBytes.dataFormat = URLLoaderDataFormat.BINARY;
+         this.loaderBytes.addEventListener(Event.COMPLETE,function(event:Event):void
+         {
+            runtimeLoader.loadBytes(URLLoader(event.target).data as ByteArray,context);
+         },false,0,true);
+         this.loaderBytes.addEventListener("ioError",this.onRuntimeError,false,0,true);
+         this.loaderBytes.addEventListener("securityError",this.onRuntimeError,false,0,true);
+         this.loaderBytes.load(new URLRequest(this.withCacheBuster(this.resolveUrl(String(parameters["loader"])))));
       }
 
       private function onRuntimeLoaded(event:Event) : void
       {
-         removeChild(this.logField);
+         graphics.clear();
+         if(this.logField != null && contains(this.logField))
+         {
+            removeChild(this.logField);
+         }
          addChild(this.runtimeLoader);
       }
 
       private function onRuntimeError(event:ErrorEvent) : void
       {
          this.log("Runtime loading error: " + event.text);
+      }
+
+      public function closeLauncher() : void
+      {
+         NativeApplication.nativeApplication.exit();
       }
 
       private function parseArguments(rawArgs:Array) : Object
@@ -184,10 +193,28 @@ package
          return key;
       }
 
+      private function resolveUrl(url:String) : String
+      {
+         if(url.indexOf("://") >= 0 || url.indexOf("app:/") == 0)
+         {
+            return url;
+         }
+         if(url.length > 2 && url.charAt(1) == ":")
+         {
+            return new File(url).url;
+         }
+         return File.applicationDirectory.resolvePath(url).url;
+      }
+
       private function joinUrl(base:Object, path:String) : String
       {
          var text:String = String(base);
          return text.charAt(text.length - 1) == "/" ? text + path : text + "/" + path;
+      }
+
+      private function withCacheBuster(url:String) : String
+      {
+         return url + (url.indexOf("?") >= 0 ? "&" : "?") + "rand=" + Math.random();
       }
 
       private function log(message:String) : void

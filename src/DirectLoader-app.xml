@@ -9,7 +9,9 @@
 		<visible>true</visible>
 		<width>1024</width>
 		<height>768</height>
-		<minSize>1024 768</minSize>
+		<minSize>400 300</minSize>
 		<renderMode>direct</renderMode>
+		<depthAndStencil>true</depthAndStencil>
+		<maximizable>false</maximizable>
 	</initialWindow>
 </application>

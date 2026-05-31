@@ -8,8 +8,8 @@ package
 
    public class GPUCapabilities extends EventDispatcher
    {
-      private static var _gpuEnabled:Boolean;
-      private static var _constrained:Boolean;
+      private static var hardwareAccelerationAvailable:Boolean = false;
+      private static var constrainedProfileUsed:Boolean = false;
 
       private var stage:Stage;
 
@@ -21,106 +21,121 @@ package
 
       public static function get gpuEnabled() : Boolean
       {
-         return _gpuEnabled;
+         return hardwareAccelerationAvailable;
       }
 
       public static function get constrained() : Boolean
       {
-         return _constrained;
+         return constrainedProfileUsed;
       }
 
       public function detect() : void
       {
-         if(this.stage3DExists())
+         hardwareAccelerationAvailable = false;
+         constrainedProfileUsed = false;
+
+         if(!this.hasStage3D())
          {
-            this.getContext3D();
+            this.completeAsync();
+            return;
          }
-         else
-         {
-            this.dispatchCompleteEventWithDelay();
-         }
+
+         this.requestDefaultContext();
       }
 
-      private function stage3DExists() : Boolean
+      private function hasStage3D() : Boolean
       {
-         return this.stage.hasOwnProperty("stage3Ds");
+         return this.stage.hasOwnProperty("stage3Ds") && this.stage["stage3Ds"].length > 0;
       }
 
-      private function getContext3D() : void
+      private function requestDefaultContext() : void
       {
-         var stage3D:Object = this.getStage3D();
-         stage3D.addEventListener("context3DCreate",this.onContext3DCreate);
-         stage3D.addEventListener("error",this.onContext3DCreateError);
+         var stage3D:Object = this.stage3D;
+         stage3D.addEventListener("context3DCreate",this.onDefaultContextCreated,false,0,true);
+         stage3D.addEventListener("error",this.onContextError,false,0,true);
          stage3D.requestContext3D("auto");
       }
 
-      private function onContext3DCreate(event:Event) : void
+      private function onDefaultContextCreated(event:Event) : void
       {
-         this.removeListeners();
-         this.detectGPUAcceleration();
-         if(!_gpuEnabled && this.isConstrainedAvailable())
+         this.removeStage3DListeners();
+         this.readDriverInfo();
+
+         if(!hardwareAccelerationAvailable && this.canRequestConstrainedProfile())
          {
-            this.getContext3DConstrained();
+            this.requestConstrainedContext();
+            return;
          }
-         else
-         {
-            this.dispatchCompleteEvent();
-         }
+
+         this.complete();
       }
 
-      private function isConstrainedAvailable() : Boolean
+      private function requestConstrainedContext() : void
       {
-         return this.getStage3D().requestContext3D.length > 1;
-      }
-
-      private function getContext3DConstrained() : void
-      {
-         _constrained = true;
-         var stage3D:Object = this.getStage3D();
-         stage3D.addEventListener("context3DCreate",this.onContext3DCreateConstrained);
-         stage3D.addEventListener("error",this.onContext3DCreateError);
+         constrainedProfileUsed = true;
+         var stage3D:Object = this.stage3D;
+         stage3D.addEventListener("context3DCreate",this.onConstrainedContextCreated,false,0,true);
+         stage3D.addEventListener("error",this.onContextError,false,0,true);
          stage3D.requestContext3D("auto","baselineConstrained");
       }
 
-      private function onContext3DCreateConstrained(event:Event) : void
+      private function onConstrainedContextCreated(event:Event) : void
       {
-         this.removeListeners();
-         this.detectGPUAcceleration();
-         this.dispatchCompleteEvent();
+         this.removeStage3DListeners();
+         this.readDriverInfo();
+         this.complete();
       }
 
-      private function detectGPUAcceleration() : void
+      private function onContextError(event:ErrorEvent) : void
       {
-         var context:Object = this.getStage3D().context3D;
-         _gpuEnabled = String(context.driverInfo).toLowerCase().indexOf("software") == -1;
-         context.dispose();
+         this.removeStage3DListeners();
+         hardwareAccelerationAvailable = false;
+         this.complete();
       }
 
-      private function onContext3DCreateError(event:ErrorEvent) : void
+      private function canRequestConstrainedProfile() : Boolean
       {
-         this.removeListeners();
-         this.dispatchCompleteEvent();
+         return this.stage3D.requestContext3D.length > 1;
       }
 
-      private function getStage3D() : Object
+      private function readDriverInfo() : void
+      {
+         var context3D:Object = this.stage3D.context3D;
+         if(context3D == null)
+         {
+            hardwareAccelerationAvailable = false;
+            return;
+         }
+
+         var driverInfo:String = String(context3D.driverInfo).toLowerCase();
+         hardwareAccelerationAvailable = driverInfo.indexOf("software") == -1;
+         context3D.dispose();
+      }
+
+      private function removeStage3DListeners() : void
+      {
+         if(!this.hasStage3D())
+         {
+            return;
+         }
+
+         var stage3D:Object = this.stage3D;
+         stage3D.removeEventListener("context3DCreate",this.onDefaultContextCreated);
+         stage3D.removeEventListener("context3DCreate",this.onConstrainedContextCreated);
+         stage3D.removeEventListener("error",this.onContextError);
+      }
+
+      private function get stage3D() : Object
       {
          return this.stage["stage3Ds"][0];
       }
 
-      private function removeListeners() : void
+      private function completeAsync() : void
       {
-         var stage3D:Object = this.getStage3D();
-         stage3D.removeEventListener("context3DCreate",this.onContext3DCreate);
-         stage3D.removeEventListener("context3DCreate",this.onContext3DCreateConstrained);
-         stage3D.removeEventListener("error",this.onContext3DCreateError);
+         setTimeout(this.complete,0);
       }
 
-      private function dispatchCompleteEventWithDelay() : void
-      {
-         setTimeout(this.dispatchCompleteEvent,0);
-      }
-
-      private function dispatchCompleteEvent() : void
+      private function complete() : void
       {
          dispatchEvent(new Event(Event.COMPLETE));
       }

@@ -21,5 +21,7 @@ package runtime
       function onServerUnavailable() : void;
 
       function onServerOverloaded() : void;
+
+      function closeLauncher() : void;
    }
 }

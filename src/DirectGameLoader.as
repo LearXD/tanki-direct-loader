@@ -356,8 +356,51 @@ package
          var game:Object = new gameClass();
          addChild(game as DisplayObject);
          this.removeLogField();
+         var directStageChildren:int = stage.numChildren;
          game.SUPER(stage,this,loaderInfo);
+         this.hideConsoleIfNeeded(directStageChildren);
          this.onLibrariesInitialized();
+      }
+
+      private function hideConsoleIfNeeded(directStageChildren:int) : void
+      {
+         if(String(this.launchParameters["showConsole"]).toLowerCase() == "true")
+         {
+            return;
+         }
+
+         this.removeDirectStageOverlays(directStageChildren);
+
+         try
+         {
+            var domain:ApplicationDomain = ApplicationDomain.currentDomain;
+            if(!domain.hasDefinition("alternativa.osgi.OSGi") || !domain.hasDefinition("alternativa.osgi.service.console.IConsole"))
+            {
+               return;
+            }
+
+            var osgiClass:Class = Class(domain.getDefinition("alternativa.osgi.OSGi"));
+            var consoleInterface:Class = Class(domain.getDefinition("alternativa.osgi.service.console.IConsole"));
+            var osgi:Object = osgiClass["getInstance"]();
+            var console:Object = osgi["getService"](consoleInterface);
+
+            if(console != null && console["isVisible"]())
+            {
+               console["hide"]();
+            }
+         }
+         catch(error:Error)
+         {
+            this.log("Console hide skipped: " + error.message);
+         }
+      }
+
+      private function removeDirectStageOverlays(directStageChildren:int) : void
+      {
+         while(stage.numChildren > directStageChildren)
+         {
+            stage.removeChildAt(stage.numChildren - 1);
+         }
       }
 
       private function resolveUrl(url:String) : String
