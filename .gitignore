@@ -1,0 +1,23 @@
+# Build output and local SWFs
+bin/
+*.swf
+*.air
+*.ane
+
+# AIR runtime/local files
+*.log
+*.tmp
+*.temp
+
+# Local configuration
+.env
+.env.*
+!.env.example
+
+# Editor/OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+

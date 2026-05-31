@@ -1,0 +1,22 @@
+{
+	"config": "air",
+	"compilerOptions": {
+		"source-path": [
+			"src",
+			"../Loader/src"
+		],
+		"library-path": [
+			"libs"
+		],
+		"output": "bin/DirectLoader.swf",
+		"default-background-color": "#000000",
+		"default-frame-rate": 60,
+		"default-size": {
+			"width": 1024,
+			"height": 768
+		},
+		"swf-version": 23
+	},
+	"application": "src/DirectLoader-app.xml",
+	"mainClass": "DirectLoaderBootstrap"
+}

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<application xmlns="http://ns.adobe.com/air/application/51.3">
+	<id>protanki-direct-loader</id>
+	<filename>DirectLoader</filename>
+	<name>DirectLoader</name>
+	<versionNumber>1.0.0</versionNumber>
+	<initialWindow>
+		<content>DirectLoader.swf</content>
+		<visible>true</visible>
+		<width>1024</width>
+		<height>768</height>
+		<minSize>1024 768</minSize>
+		<renderMode>direct</renderMode>
+	</initialWindow>
+</application>
