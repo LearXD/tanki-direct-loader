@@ -1,4 +1,4 @@
-# Tanki Direct Loader
+# SWF Runtime Bootstrap
 
 Loader AIR/ActionScript para iniciar o `library.swf` diretamente, sem passar pelo `StandaloneLoader` e pelo `Prelauncher` originais.
 

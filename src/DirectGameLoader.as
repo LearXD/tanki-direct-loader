@@ -1,6 +1,5 @@
 package
 {
-   import alternativa.ILauncherListener;
    import flash.display.DisplayObject;
    import flash.desktop.NativeApplication;
    import flash.display.Loader;
@@ -28,8 +27,9 @@ package
    import flash.text.TextFormat;
    import flash.utils.ByteArray;
    import flash.utils.setTimeout;
+   import runtime.IGameLauncherHost;
 
-   public class DirectGameLoader extends Sprite implements ILauncherListener
+   public class DirectGameLoader extends Sprite implements IGameLauncherHost
    {
       private static const ENGINE_AUTO:String = "auto";
       private static const ENGINE_HARDWARE:String = "hardware";

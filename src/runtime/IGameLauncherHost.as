@@ -1,6 +1,6 @@
-package alternativa
+package runtime
 {
-   public interface ILauncherListener
+   public interface IGameLauncherHost
    {
       function onConfigLoadingStart() : void;
 

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <application xmlns="http://ns.adobe.com/air/application/51.3">
-	<id>protanki-direct-loader</id>
+	<id>swf-runtime-bootstrap</id>
 	<filename>DirectLoader</filename>
-	<name>DirectLoader</name>
+	<name>SWF Runtime Bootstrap</name>
 	<versionNumber>1.0.0</versionNumber>
 	<initialWindow>
 		<content>DirectLoader.swf</content>
